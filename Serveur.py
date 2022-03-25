@@ -1,19 +1,15 @@
-import os
 import socket
-import struct
 import sys
-
-import pygame
-from pygame.locals import *
-
-os.environ["SDL_VIDEODRIVER"] = "dummy"
-
-from random import randint, choice
 from dataclasses import dataclass, field
+from random import randint, choice
 from typing import Optional, Callable, Any, List, Dict, Tuple, Set
 
+import pygame
+
+from common import send, build_message, ERROR, recv, parse_message, CASE_FUNCTION
+
 # JEU
-NBJOUEUR = 2
+NBJOUEUR = 1
 NBCASES = 5
 BASE_UNITE_SIZE = 12
 MAX_TURN = 30
@@ -34,50 +30,6 @@ BLUE = (77, 119, 255)
 RED = (249, 7, 22)
 BLACK = (0, 0, 0)
 
-
-def ERROR(msg: str) -> None:
-    print("[ERROR] {}".format(msg))
-    exit()
-
-
-def send(socket, message):
-    socket.send(struct.pack("i", len(message)) + message)
-
-
-def recv(socket):
-    try:
-        size = struct.unpack("i", socket.recv(struct.calcsize("i")))[0]
-        data = ""
-        while len(data) < size:
-            msg = socket.recv(size - len(data))
-            if not msg:
-                ERROR("Problème lors de la reception du socket {}".format(socket))
-            data += msg.decode()
-        return data
-    except:
-        exit()
-
-
-def build_message(key: str, params: List[Any]) -> bytes:
-    msg = key + "|" + '|'.join(map(str, params))
-    print("[LOG/MSG] " + msg)
-    return msg.encode()
-
-
-def parse_message(msg: str) -> List[str]:
-    return [s.upper() for s in msg.split("|")]
-
-
-class CASE_FUNCTION:
-    NONE = 0
-    MULT = 2
-    TELEPORT = 3
-    BLOCK = 4
-    PASS_TURN = 5
-    PASS_NEXT_TURN = 6
-    DIVIDE = 7
-
-
 Pos = Tuple[int, int]
 
 
@@ -88,7 +40,7 @@ class Lien:
 
     @property
     def direction(self) -> Pos:
-        return (self.to_case[0] - self.from_case[0], self.to_case[1] - self.from_case[1])
+        return self.to_case[0] - self.from_case[0], self.to_case[1] - self.from_case[1]
 
     @property
     def width(self) -> Tuple[float, float]:
@@ -113,7 +65,7 @@ class Case:
 
     @property
     def pos(self) -> Pos:
-        return (self.posx, self.posy)
+        return self.posx, self.posy
 
 
 @dataclass
@@ -592,7 +544,7 @@ class Serveur:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('', PORT))
         self.team_name: List[str] = []
-        # Attente de la connexion des joueurs
+        # Attente de la connection des joueurs
         self.players: List[socket.socket] = []
         print("[INFO] SERVEUR STARTUP sur le port {}".format(PORT))
 
