@@ -65,7 +65,8 @@ class Team:
         send(connection, build_message("JOIN", [Team.name]))
 
     def move(self, id_group: int, amount: int, dir: DIRECTION):
-        pass
+        group = self.getGroupById(id_group)
+        group.pos = group.pos.getNewPos(dir.value)
 
     def stay(self):
         send(connection, build_message("STAY", []))
@@ -115,6 +116,14 @@ class Map:
     def inMap(self, pos: Pos) -> bool:
         return 0 <= pos.x < self.size and 0 <= pos.y < self.size
 
+    def getCasesFunctions(self, function: CASE_FUNCTION):
+        res = []
+        for row in self.grid:
+            for case in row:
+                if case.function == function:
+                    res.append(case)
+        return res
+
 
 class Game:
     nbTurn = 0
@@ -130,7 +139,7 @@ class Game:
         self.teams.remove(team)
 
     def getTeam(self, id: int) -> Team:
-        return list(filter(lambda t: t.id == id, self.teams))[0]
+        return self.teams[id]
 
 
 connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

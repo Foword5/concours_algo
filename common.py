@@ -1,4 +1,5 @@
 import struct
+from enum import Enum
 from typing import List, Any
 
 
@@ -12,7 +13,7 @@ class CASE_FUNCTION:
     DIVIDE = 7
 
 
-class DIRECTION:
+class DIRECTION(Enum):
     NORTH = "N"
     SOUTH = "S"
     EAST = "E"

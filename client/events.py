@@ -2,7 +2,7 @@ from client.core import game, Pos
 from common import ERROR, CASE_FUNCTION
 
 
-def handleEvent(type: int, *params: str):
+def handleEvent(type: int, params: list[str]):
     if type == 0:
         handle_0(*params)
     elif type == 1:
