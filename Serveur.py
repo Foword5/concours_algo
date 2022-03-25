@@ -13,7 +13,7 @@ NBJOUEUR = 1
 NBCASES = 5
 BASE_UNITE_SIZE = 12
 MAX_TURN = 30
-EVENT_PROBA = 5  # Pourcentage
+EVENT_PROBA = 100  # Pourcentage
 WAIT_TIME = 1000  # Temps à attendre entre chaque action d'un joueur (pour voir ce qu'il se passe)
 
 # AFFICHAGE
@@ -154,7 +154,8 @@ class Game:
         # Annonce du début de la partie
         print("[INFO] Tous les joueurs ont rejoins, début de la partie")
         for i, player in enumerate(self.serveur.players):
-            send(player, build_message("NEWGAME", [NBCASES, NBJOUEUR, i, *self.positionJoueur[i]]))
+            send(player, build_message("NEWGAME",
+                                       [NBCASES, NBJOUEUR, i, *self.positionJoueur[i], BASE_UNITE_SIZE, EVENT_PROBA]))
 
         # DEFINE: Joueurs
         self.listJoueurs = [Joueur(i, self.serveur.team_name[i], self.positionJoueur[i], self.colorJoueur[i], NBCASES)
@@ -173,7 +174,7 @@ class Game:
         }
 
     def in_game(self, pos: Pos) -> bool:
-        return pos[0] >= 0 and pos[0] < NBCASES and pos[1] >= 0 and pos[1] < NBCASES
+        return 0 <= pos[0] < NBCASES and 0 <= pos[1] < NBCASES
 
     def get_case_at(self, pos: Pos) -> Optional[Case]:
         if pos is None or not self.in_game(pos):
@@ -212,6 +213,9 @@ class Game:
         if case.function == CASE_FUNCTION.BLOCK:
             # Si un joueur essaye d'aller sur une case qui est bloquée, c'est une erreur
             ERROR("Déplacement sur une case bloquée")
+
+        if to_move_count == 0:
+            ERROR("Tu ne peux pas déplacer aucune unité")
 
         # Si on déplace qu'une partie de nos unités
         if to_move_count <= unite.size:
@@ -292,8 +296,8 @@ class Game:
             random_case = choice(casesVides)
             random_function_id = randint(2, 7)
             random_case.function = random_function_id
-            params = [*random_case.pos]
 
+            params = [*random_case.pos]
             if random_function_id == CASE_FUNCTION.TELEPORT:
                 random_case.turn_left = -1
                 pastille = (randint(0, 255), randint(0, 255), randint(0, 255))
@@ -316,13 +320,14 @@ class Game:
                 random_temps = randint(1, 5)
                 params.append(str(random_temps))
                 random_case.turn_left = random_temps
-            msg = build_message(str(random_function_id), params)
+            msg = build_message("EVENT", [str(random_function_id), *params])
+            print(msg)
             return msg
         return None
 
     def get_new_pos(self, depart: Pos, direction: str) -> Pos:
         if direction == "N":
-            return (depart[0], depart[1] - 1)
+            return depart[0], depart[1] - 1
         elif direction == "S":
             return (depart[0], depart[1] + 1)
         elif direction == "E":
@@ -514,9 +519,9 @@ class Interface(Game):
             for other_player_id, other_player in enumerate(self.serveur.players):
                 if other_player_id != player_id:
                     if command == "MOVE":
-                        msg = build_message("0", [player_id, *params])
+                        msg = build_message("EVENT", [0, -1, -1, player_id, *params])
                     elif command == "STAY":
-                        msg = build_message("1", [player_id])
+                        msg = build_message("EVENT", [1, -1, -1, player_id])
                     self.last_actions[other_player_id].append(msg)
 
             self.render()
@@ -544,7 +549,7 @@ class Serveur:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('', PORT))
         self.team_name: List[str] = []
-        # Attente de la connection des joueurs
+        # Attente de la connexion des joueurs
         self.players: List[socket.socket] = []
         print("[INFO] SERVEUR STARTUP sur le port {}".format(PORT))
 

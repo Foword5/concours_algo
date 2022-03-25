@@ -1,10 +1,11 @@
-from client.core import team, connection, gameMap, Team, Pos
+from client.core import team, connection, Team, Pos, game
 from client.events import handleEvent
 from common import recv, parse_message, ERROR
 
 
 def start():
     team.joinServer()
+    gamemap = game.map
 
     while True:
         resp = recv(connection)
@@ -14,23 +15,29 @@ def start():
         command, *params = parse_message(resp)
         if not team.id:
             if command == "NEWGAME":
+                (size, k, i, x, y, baseGroupSize, eventProba) = list(map(int, params))
 
-                (size, k, i, x, y) = list(map(int, params))
+                game.baseGroupSize = baseGroupSize
+                game.eventProba = eventProba
 
-                gameMap.initialize(size)
+                gamemap.initialize(size)
                 team.initialize(i, Pos(x, y))
 
-                gameMap.teams.append(team)
+                gamemap.teams.append(team)
                 for i in range(k - 1):
-                    gameMap.teams.append(Team())
+                    gamemap.teams.append(Team())
             else:
                 continue
 
         if command == "NEWTURN":
             (n) = params
-        elif command == "EVENT":
-            (type, x, y, params) = params
-            handleEvent(type, x, y, params)
+            eventsHandled = 0
+            while eventsHandled < n:
+                if command == "EVENT":
+                    (type, *params) = params
+                    handleEvent(type, params)
+                    eventsHandled += 1
+
         elif command == "ERROR":
             ERROR(params[0])
 
