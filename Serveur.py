@@ -9,7 +9,7 @@ import pygame
 from common import send, build_message, ERROR, recv, parse_message, CASE_FUNCTION
 
 # JEU
-NBJOUEUR = 1
+NBJOUEUR = 2
 NBCASES = 5
 BASE_UNITE_SIZE = 12
 MAX_TURN = 30

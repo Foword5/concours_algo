@@ -23,23 +23,25 @@ def start():
                 gamemap.initialize(size)
                 team.initialize(i, Pos(x, y))
 
-                gamemap.teams.append(team)
+                game.teams.append(team)
                 for i in range(k - 1):
-                    gamemap.teams.append(Team())
-            else:
-                continue
+                    game.teams.append(Team())
 
         if command == "NEWTURN":
-            (n) = params
+            n = int(params[0])
             eventsHandled = 0
             while eventsHandled < n:
+                resp = recv(connection)
+                command, *params = parse_message(resp)
                 if command == "EVENT":
-                    (type, *params) = params
-                    handleEvent(type, params)
+                    handleEvent(int(params[0]), *(params[3:]))
                     eventsHandled += 1
+            team.stay()
 
         elif command == "ERROR":
             ERROR(params[0])
+
+        game.nbTurn += 1
 
 
 if __name__ == '__main__':

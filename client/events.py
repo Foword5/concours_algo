@@ -13,15 +13,15 @@ def handleEvent(type: int, *params: str):
     elif type == 3:
         handle_3(Pos(int(params[0]), int(params[1])), Pos(int(params[2]), int(params[3])))
     elif type == 4:
-        pass
+        handle_4(Pos(int(params[0]), int(params[1])), int(params[2]))
     elif type == 5:
-        pass
+        handle_5(Pos(int(params[0]), int(params[1])))
     elif type == 6:
-        pass
+        handle_6(Pos(int(params[0]), int(params[1])))
     elif type == 7:
-        pass
+        handle_7(Pos(int(params[0]), int(params[1])))
     else:
-        ERROR("-".join(params))
+        ERROR("-".join(params) + str(type))
 
 
 def handle_0(id_team: int, id_group: int, amount: int, dir: str):
@@ -44,5 +44,20 @@ def handle_2(pos: Pos):
 def handle_3(firstPos: Pos, secondPos: Pos):
     firstCase = game.map.getCase(firstPos)
     secondCase = game.map.getCase(secondPos)
+    firstCase.makePortalWith(secondCase)
 
-    # firstCase.function = CASE
+
+def handle_4(pos: Pos, time: int):
+    game.map.getCase(pos).blockedUntilTurn = game.nbTurn + time
+
+
+def handle_5(pos: Pos):
+    game.map.getCase(pos).function = CASE_FUNCTION.PASS_TURN
+
+
+def handle_6(pos: Pos):
+    game.map.getCase(pos).function = CASE_FUNCTION.PASS_NEXT_TURN
+
+
+def handle_7(pos: Pos):
+    game.map.getCase(pos).function = CASE_FUNCTION.DIVIDE

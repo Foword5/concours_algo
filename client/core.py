@@ -68,7 +68,7 @@ class Team:
         pass
 
     def stay(self):
-        send(connection, build_message("STAY"))
+        send(connection, build_message("STAY", []))
 
 
 class Case:
@@ -77,12 +77,27 @@ class Case:
         self.group: Group = None
         self.function: CASE_FUNCTION = None
         self.linkedTo: Case = None
+        self.blockedUntilTurn = -1
 
     def setFunction(self, function: CASE_FUNCTION):
         self.function = function
 
     def setGroup(self, group: Group):
         self.group = group
+
+    def makePortalWith(self, otherCase):
+        self.function = CASE_FUNCTION.TELEPORT
+        self.linkedTo = otherCase
+
+        otherCase.function = CASE_FUNCTION.TELEPORT
+        otherCase.linkedTo = self
+
+    def removePortal(self, otherCase):
+        self.function = None
+        self.linkedTo = None
+
+        otherCase.function = None
+        otherCase.linkedTo = None
 
 
 class Map:
@@ -102,7 +117,7 @@ class Map:
 
 
 class Game:
-    nbTours = 0
+    nbTurn = 0
     teams = []
     map = Map()
     baseGroupSize: int
